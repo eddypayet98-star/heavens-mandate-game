@@ -208,26 +208,7 @@
   <script>
     const seasonNames = ["Spring", "Summer", "Autumn", "Winter"];
 
-    const STAT_LIMITS = {
-      sectPower: { min: -999, max: 220 },
-      disciples: { min: 0, max: 300 },
-      spiritStones: { min: -200, max: 1200 },
-      reputation: { min: 0, max: 100 },
-      loyalty: { min: 0, max: 100 },
-      heavenlyFateTokens: { min: 0, max: 9 }
-    };
 
-    const REALM_TRACK = [
-      { name: "Qi Gathering", threshold: 0 },
-      { name: "Foundation Establishment", threshold: 60 },
-      { name: "Core Formation", threshold: 105 },
-      { name: "Nascent Soul", threshold: 155 }
-    ];
-
-    const initialState = () => ({
-      sectName: "Azure Ascendant Sect",
-      leaderRealm: "Qi Gathering",
-      realmStage: 0,
       sectPower: 35,
       disciples: 24,
       spiritStones: 90,
@@ -247,46 +228,19 @@
       {
         text: "A rogue elder from a rival sect seeks shelter. Their techniques are powerful but their loyalty is uncertain.",
         choices: [
-          { label: "Accept them as instructor", effects: { sectPower: 5, loyalty: -5, reputation: -3 } },
-          { label: "Reject and drive them away", effects: { reputation: 3, sectPower: -2, loyalty: 1 } },
-          { label: "Imprison and extract manuals", effects: { spiritStones: 12, sectPower: 3, reputation: -7, loyalty: -5 } },
-          { label: "Offer passage and send a gift", effects: { spiritStones: -9, reputation: 5, loyalty: 3 } }
+
         ]
       },
       {
         text: "A spirit mine under your territory begins to collapse after unstable qi surges.",
         choices: [
-          { label: "Spend heavily to stabilize the mine", effects: { spiritStones: -18, sectPower: 3, disciples: 1 } },
-          { label: "Evacuate and seal it", effects: { sectPower: -3, loyalty: 2, reputation: 2 } },
-          { label: "Force disciples to continue extraction", effects: { spiritStones: 18, loyalty: -8, disciples: -2 } },
-          { label: "Invite an allied sect to co-manage", effects: { reputation: 4, spiritStones: 6, sectPower: 1 } }
-        ]
-      },
-      {
-        text: "A heavenly phenomenon appears over your mountain. Cultivators gather, sensing opportunity.",
-        choices: [
-          { label: "Host an open enlightenment forum", effects: { reputation: 6, spiritStones: -8, disciples: 2 } },
-          { label: "Restrict access and harvest the omen", effects: { sectPower: 4, reputation: -4, loyalty: -2 } },
-          { label: "Auction access rights", effects: { spiritStones: 16, reputation: -2, sectPower: 1 } },
-          { label: "Meditate in seclusion as leader", effects: { sectPower: 3, loyalty: 2 } }
-        ]
-      },
-      {
-        text: "Outer disciples demand better resource distribution after repeated dangerous missions.",
-        choices: [
-          { label: "Raise stipends immediately", effects: { spiritStones: -14, loyalty: 8, reputation: 1 } },
-          { label: "Hold a stern assembly and deny requests", effects: { loyalty: -8, sectPower: 2 } },
-          { label: "Promote only top performers", effects: { sectPower: 3, loyalty: -3, disciples: -1 } },
-          { label: "Let elders negotiate compromise", effects: { loyalty: 3, reputation: 2, spiritStones: -6 } }
+
         ]
       },
       {
         text: "A demonic beast tide approaches nearby villages under your nominal protection.",
         choices: [
-          { label: "Lead disciples personally into battle", effects: { sectPower: 4, disciples: -2, reputation: 7 } },
-          { label: "Fortify sect gates and ignore villages", effects: { sectPower: 2, reputation: -8, loyalty: -4 } },
-          { label: "Hire mercenary cultivators", effects: { spiritStones: -13, reputation: 4, sectPower: 2 } },
-          { label: "Offer talismans and evacuate civilians", effects: { spiritStones: -8, loyalty: 4, reputation: 5 } }
+
         ]
       }
     ];
@@ -300,31 +254,7 @@
     const rewindBtn = document.getElementById("rewindBtn");
     const restartBtn = document.getElementById("restartBtn");
 
-    function clampStat(key, value) {
-      if (!STAT_LIMITS[key]) return value;
-      const { min, max } = STAT_LIMITS[key];
-      return Math.min(max, Math.max(min, value));
-    }
 
-    function clampAllStats() {
-      Object.keys(STAT_LIMITS).forEach((key) => {
-        state[key] = clampStat(key, state[key]);
-      });
-    }
-
-    function updateRealmFromPower() {
-      let highestReached = 0;
-      for (let i = 0; i < REALM_TRACK.length; i += 1) {
-        if (state.sectPower >= REALM_TRACK[i].threshold) {
-          highestReached = i;
-        }
-      }
-
-      if (highestReached > state.realmStage) {
-        state.realmStage += 1;
-        state.leaderRealm = REALM_TRACK[state.realmStage].name;
-        addLog(`<strong>Realm Breakthrough:</strong> The Sect Leader reaches ${state.leaderRealm}.`);
-      }
     }
 
     function getStatsDisplay() {
@@ -350,35 +280,7 @@
       });
     }
 
-    function getDifficultyMultiplier() {
-      const stage = Math.floor(state.sectPower / 40);
-      return Math.min(2.3, 1 + stage * 0.15);
-    }
 
-    function scaleEventForDifficulty(event) {
-      const multiplier = getDifficultyMultiplier();
-      const scaledEvent = JSON.parse(JSON.stringify(event));
-
-      scaledEvent.choices = scaledEvent.choices.map((choice) => {
-        const adjusted = { ...choice, effects: { ...choice.effects } };
-        Object.entries(adjusted.effects).forEach(([key, value]) => {
-          if (typeof value !== "number") return;
-
-          if (value > 0) {
-            adjusted.effects[key] = Math.max(1, Math.round(value / multiplier));
-          } else if (value < 0) {
-            adjusted.effects[key] = Math.min(-1, Math.round(value * multiplier));
-          }
-        });
-        return adjusted;
-      });
-
-      return scaledEvent;
-    }
-
-    function pickRandomEvent() {
-      const i = Math.floor(Math.random() * events.length);
-      return scaleEventForDifficulty(events[i]);
     }
 
     function renderEvent() {
@@ -400,8 +302,7 @@
     function summarizeEffects(effects) {
       return Object.entries(effects)
         .map(([key, value]) => {
-          const display = `${value >= 0 ? "+" : ""}${value} ${key}`;
-          return `<span class="${value < 0 ? "bad" : "good"}">${display}</span>`;
+
         })
         .join(", ");
     }
@@ -413,25 +314,7 @@
       logContainer.prepend(item);
     }
 
-    function applySeasonUpkeep() {
-      if (state.spiritStones < 0) {
-        const shortage = Math.abs(state.spiritStones);
-        const loyaltyPenalty = Math.max(1, Math.ceil(shortage / 25));
-        state.loyalty -= loyaltyPenalty;
-        addLog(`<strong>Resource Shortage:</strong> -${loyaltyPenalty} loyalty from spirit stone debt.`);
-      }
-    }
 
-    function applyEffects(effects) {
-      Object.entries(effects).forEach(([key, value]) => {
-        if (typeof value === "number" && key in state) {
-          state[key] += value;
-        }
-      });
-
-      applySeasonUpkeep();
-      clampAllStats();
-      updateRealmFromPower();
     }
 
     function checkLoseCondition() {
@@ -456,6 +339,7 @@
       };
 
       applyEffects(choice.effects);
+
       addLog(`<strong>${seasonNames[state.seasonIndex]} Turn ${state.turn}:</strong> ${choice.label}<br>${summarizeEffects(choice.effects)}`);
 
       checkLoseCondition();
